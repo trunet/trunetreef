@@ -1,6 +1,6 @@
 Trunetreef
 
-This is a reef controller software.
+This is a reef controller software using [ChibiOS](http://www.chibios.org) and [µGFX](http://www.ugfx.org).
 
 It's running on a HY-MiniSTM32V with 3.2" TFT Display and touch
 screen.
