@@ -1,0 +1,2 @@
+BOARDINC = HY-MiniSTM32V
+BOARDSRC = $(BOARDINC)/board.c
