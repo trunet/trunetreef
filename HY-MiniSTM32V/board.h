@@ -77,8 +77,6 @@
 /*
  * Port A setup.
  * Everything input with pull-up except:
- * PA2  - Alternate output  (USART2 TX).
- * PA3  - Normal input      (USART2 RX).
  * PA4  -  (TP CS)
  * PA5  -  (SPI SCK)
  * PA6  -  (SPI MISO)
@@ -91,7 +89,7 @@
  * PA14 -  (JTCK)
  * PA15 -  (JTDI)
  */
-#define VAL_GPIOACRL            0xBBB34B88      /*  PA7...PA0 */
+#define VAL_GPIOACRL            0xBBB38888      /*  PA7...PA0 */
 #define VAL_GPIOACRH            0x888444B8      /* PA15...PA8 */
 #define VAL_GPIOAODR            0xFFFFFFFF
 

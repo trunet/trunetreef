@@ -45,8 +45,11 @@ const char *myload(uint16_t instance)
 #define ADC_GRP1_BUF_DEPTH      16
 #define ADC_GRP2_NUM_CHANNELS   1
 #define ADC_GRP2_BUF_DEPTH      16
+#define ADC_GRP3_NUM_CHANNELS   1
+#define ADC_GRP3_BUF_DEPTH      16
 static adcsample_t samples1[ADC_GRP1_NUM_CHANNELS * ADC_GRP1_BUF_DEPTH];
 static adcsample_t samples2[ADC_GRP2_NUM_CHANNELS * ADC_GRP2_BUF_DEPTH];
+static adcsample_t samples3[ADC_GRP3_NUM_CHANNELS * ADC_GRP3_BUF_DEPTH];
 
 static const ADCConversionGroup adcgrpcfg1 = {
   FALSE,
@@ -63,7 +66,7 @@ static const ADCConversionGroup adcgrpcfg1 = {
 
 static const ADCConversionGroup adcgrpcfg2 = {
   FALSE,
-  ADC_GRP1_NUM_CHANNELS,
+  ADC_GRP2_NUM_CHANNELS,
   NULL,
   NULL,
   0, 0,                         /* CR1, CR2 */
@@ -72,6 +75,26 @@ static const ADCConversionGroup adcgrpcfg2 = {
   ADC_SQR1_NUM_CH(ADC_GRP2_NUM_CHANNELS),
   0,                            /* SQR2 */
   ADC_SQR3_SQ1_N(ADC_CHANNEL_IN1)
+};
+
+static const ADCConversionGroup adcgrpcfg3 = {
+  FALSE,
+  ADC_GRP3_NUM_CHANNELS,
+  NULL,
+  NULL,
+  0, 0,                         /* CR1, CR2 */
+  ADC_SMPR2_SMP_AN1(ADC_SAMPLE_239P5),
+  0,                            /* SMPR2 */
+  ADC_SQR1_NUM_CH(ADC_GRP3_NUM_CHANNELS),
+  0,                            /* SQR2 */
+  ADC_SQR3_SQ1_N(ADC_CHANNEL_IN10)
+};
+
+/* I2C1 */
+static const I2CConfig i2cfg1 = {
+    OPMODE_I2C,
+    400000,
+    FAST_DUTY_CYCLE_16_9
 };
 
 const GWidgetStyle RedWidgetStyle = {
@@ -309,8 +332,24 @@ int main(void) {
 	halInit();
 	chSysInit();
 
+	// Serial debugging if without JTAG
 	sdStart(&SD1, NULL);
 	chprintf((BaseSequentialStream *)&SD1, "\n\nTrunetReef v0.1\n\n");
+
+	// Atlas-Scientific Serial Probes
+	// USART2 = PH
+	// USART3 = EC
+	palSetPadMode(GPIOA, 2, PAL_MODE_STM32_ALTERNATE_OPENDRAIN); // USART2 TX
+	palSetPadMode(GPIOA, 3, PAL_MODE_INPUT); // USART2 RX
+	sdStart(&SD2, NULL);
+	palSetPadMode(GPIOB, 10, PAL_MODE_STM32_ALTERNATE_OPENDRAIN); // USART3 TX
+	palSetPadMode(GPIOB, 11, PAL_MODE_INPUT); // USART3 RX
+	sdStart(&SD3, NULL);
+
+	// I2C Bus
+	palSetPadMode(GPIOB, 8, PAL_MODE_STM32_ALTERNATE_OPENDRAIN); // I2C1 SCL
+	palSetPadMode(GPIOB, 9, PAL_MODE_STM32_ALTERNATE_OPENDRAIN); // I2C1 SDA
+	i2cStart(&I2CD1, &i2cfg1);
 
 	RTCTime teste;
 	teste.tv_sec = 1404866705;
@@ -322,9 +361,11 @@ int main(void) {
 
 	palSetGroupMode(GPIOA, PAL_PORT_BIT(0) | PAL_PORT_BIT(1),
 	                  0, PAL_MODE_INPUT_ANALOG);
+	palSetPadMode(GPIOC, 0, PAL_MODE_INPUT_ANALOG);
 	adcStart(&ADCD1, NULL);
 	adcConvert(&ADCD1, &adcgrpcfg1, samples1, ADC_GRP1_BUF_DEPTH);
 	adcConvert(&ADCD1, &adcgrpcfg2, samples2, ADC_GRP2_BUF_DEPTH);
+	adcConvert(&ADCD1, &adcgrpcfg3, samples3, ADC_GRP3_BUF_DEPTH);
 
 	chThdCreateStatic(waThreadLed, sizeof(waThreadLed), NORMALPRIO, ThreadLed, NULL);
 	chThdCreateStatic(waThreadLCD, sizeof(waThreadLCD), NORMALPRIO, ThreadLCD, NULL);
